@@ -225,8 +225,8 @@ class WeeklyExerciseScreenState extends State<WeeklyExerciseScreen> {
             Padding(
               padding: EdgeInsets.only(bottom: mq.height(2)),
               child: _buildWeekSection(
-                '${AppString.week(context)} $i',
-                calendar.weeks['${AppString.week(context)}$i']!.days,
+                "week",
+                calendar.weeks['week$i']!.days,
                 active: i == 1, // Highlight the current week
                 mq: mq,
               ),

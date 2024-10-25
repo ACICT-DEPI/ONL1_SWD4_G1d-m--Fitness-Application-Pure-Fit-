@@ -91,7 +91,6 @@ class AppString {
   static String daysLeft(BuildContext context) => 'daysLeft'.tr(context);
   static String growthMessage(BuildContext context) =>
       'growthMessage'.tr(context);
-  static String week(BuildContext context) => 'week'.tr(context);
 
 
 // UserAgeScreen ---------------------------------------------------
