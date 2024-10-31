@@ -22,7 +22,7 @@ android {
         // Set a specific minimum SDK version (e.g., 21 for wider compatibility)
         minSdkVersion 21
         // Set the target SDK version to match the latest version you're targeting (e.g., 33)
-        targetSdkVersion 33
+        targetSdkVersion 34
         // Set versionCode and versionName manually
         versionCode 1 // Increment this with each release
         versionName "1.0"
