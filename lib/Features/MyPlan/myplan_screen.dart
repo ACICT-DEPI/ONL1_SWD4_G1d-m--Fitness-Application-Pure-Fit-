@@ -6,6 +6,7 @@ import 'package:PureFit/Features/MyPlan/component/static_card.dart';
 import 'package:PureFit/Features/Profile/Logic/cubit/profile_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shimmer/shimmer.dart'; // Import shimmer package
 import '../../Core/Components/media_query.dart';
 import '../../Core/Routing/routes.dart';
 
@@ -22,19 +23,6 @@ class _MyPlanScreenState extends State<MyPlanScreen> {
   String stepsValue = "0"; // Initial default value for steps
   String sleepValue = "8 hr"; // Initial default value for sleep
   String waterValue = "2 lits"; // Initial default value for water
-
-  @override
-  void initState() {
-    super.initState();
-    final user = context.read<ProfileCubit>().user;
-    bmi = Calculator().getBmiActivity(user!.userWeight, user.userHeight);
-    calories = Calculator().getBmrActivity(
-      activityLevel: user.activity!,
-      weight: user.userWeight,
-      height: user.userHeight,
-      age: user.age,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,19 +51,76 @@ class _MyPlanScreenState extends State<MyPlanScreen> {
               horizontal: mq.width(3),
               vertical: mq.height(2),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildRowOfDailyPlanStatics(mq),
-                SizedBox(height: mq.height(1)),
-                _buildFourGridsofStatics(context, mq),
-                SizedBox(height: mq.height(4)),
-                BMICard(bmi: bmi),
-              ],
+            child: BlocBuilder<ProfileCubit, ProfileState>(
+              builder: (context, state) {
+                if (state is ProfileSuccess) {
+                  final user = context.read<ProfileCubit>().user;
+
+                  if (user != null) {
+                    bmi = Calculator()
+                        .getBmiActivity(user.userWeight, user.userHeight);
+                    calories = Calculator().getBmrActivity(
+                      activityLevel: user.activity!,
+                      weight: user.userWeight,
+                      height: user.userHeight,
+                      age: user.age,
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildRowOfDailyPlanStatics(mq),
+                      SizedBox(height: mq.height(1)),
+                      _buildFourGridsofStatics(context, mq),
+                      SizedBox(height: mq.height(4)),
+                      BMICard(bmi: bmi),
+                    ],
+                  );
+                } else if (state is ProfileLoading) {
+                  // Show shimmer effect while loading
+                  return _buildShimmerLoading(mq);
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildShimmerLoading(CustomMQ mq) {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: mq.height(1)),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.white,
+            child: SizedBox(
+              height: mq.height(35),
+              child: GridView.builder(
+                physics:
+                    const NeverScrollableScrollPhysics(), // Prevent scrolling within the grid
+                itemCount: 4,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisSpacing: mq.width(3.75),
+                  mainAxisSpacing: mq.height(2),
+                  crossAxisCount: 2, // Number of columns in the grid
+                  mainAxisExtent:
+                      mq.height(16), // Height of each item in the grid
+                ),
+                itemBuilder: (context, index) {
+                  return const ShimmerStaticCard();
+                },
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: mq.height(4)),
+        _buildShimmerCard()
+      ],
     );
   }
 
@@ -224,4 +269,85 @@ class _MyPlanScreenState extends State<MyPlanScreen> {
         return const SizedBox.shrink();
     }
   }
+}
+
+class ShimmerStaticCard extends StatelessWidget {
+  final double width;
+  final double height;
+
+  const ShimmerStaticCard({
+    super.key,
+    this.width = 100.0,
+    this.height = 100.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.white,
+      child: Container(
+        padding: const EdgeInsets.all(16.0), // Adjust padding as necessary
+        height: height,
+        width: width,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              height: 16,
+              color: Colors.grey[300],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              height: 20,
+              color: Colors.grey[300],
+            ),
+            const Spacer(),
+            Container(
+              width: double.infinity,
+              height: 12,
+              color: Colors.grey[300],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Widget _buildShimmerCard() {
+  return Shimmer.fromColors(
+    baseColor: Colors.grey.shade300,
+    highlightColor: Colors.grey.shade100,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+
+        Container(
+          height: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Row(
+            children: List.generate(
+              6,
+              (index) => Expanded(
+                flex: 1,
+                child: Container(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
